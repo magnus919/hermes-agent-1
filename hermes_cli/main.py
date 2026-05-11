@@ -1318,6 +1318,21 @@ def _launch_tui(
             except Exception:
                 pass
 
+    # Exit code 42 = TUI requested an update. Exec `hermes update` so the
+    # user sees update output directly and gets the new version.
+    if code == 42:
+        import shutil
+
+        hermes_bin = shutil.which("hermes")
+        if hermes_bin:
+            update_argv = [hermes_bin, "update"]
+        else:
+            update_argv = [sys.executable, "-m", "hermes_cli.main", "update"]
+        print()
+        print("⚕ Launching update...")
+        print()
+        os.execvp(update_argv[0], update_argv)
+
     sys.exit(code)
 
 

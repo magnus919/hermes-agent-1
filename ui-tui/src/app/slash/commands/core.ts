@@ -93,6 +93,16 @@ export const coreCommands: SlashCommand[] = [
   },
 
   {
+    help: 'update Hermes Agent to the latest version (exits TUI)',
+    name: 'update',
+    run: (_arg, ctx) => {
+      ctx.transcript.sys('exiting TUI to run update...')
+      // Exit code 42 signals the Python wrapper to exec `hermes update`
+      setTimeout(() => process.exit(42), 100)
+    }
+  },
+
+  {
     aliases: ['scroll'],
     help: 'toggle mouse/wheel tracking [on|off|toggle]',
     name: 'mouse',

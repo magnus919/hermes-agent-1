@@ -6983,6 +6983,8 @@ class HermesCLI:
             self._handle_copy_command(cmd_original)
         elif canonical == "debug":
             self._handle_debug_command()
+        elif canonical == "update":
+            self._handle_update_command()
         elif canonical == "paste":
             self._handle_paste_command()
         elif canonical == "image":
@@ -8156,6 +8158,54 @@ class HermesCLI:
 
         args = SimpleNamespace(lines=200, expire=7, local=False)
         run_debug_share(args)
+
+    def _handle_update_command(self):
+        """Handle /update — update Hermes Agent to the latest version.
+
+        In the classic CLI this exits the session and execs ``hermes update``
+        so the user sees update output directly and gets the new version on
+        next launch.
+        """
+        import os
+        import shutil
+        import sys
+        from hermes_cli.config import is_managed, format_managed_message
+        from pathlib import Path
+
+        if is_managed():
+            print(f"  ✗ {format_managed_message('update Hermes Agent')}")
+            return
+
+        project_root = Path(__file__).parent.resolve()
+        git_dir = project_root / ".git"
+        if not git_dir.exists():
+            print("  ✗ Not a git repository — cannot update.")
+            print("  Reinstall with:")
+            print("    curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash")
+            return
+
+        # Confirm with user
+        try:
+            answer = input("  Update Hermes Agent to the latest version? This will exit the current session. [Y/n] ")
+        except (EOFError, KeyboardInterrupt):
+            print()
+            return
+        if answer.strip().lower() in ("n", "no"):
+            return
+
+        # Resolve hermes binary
+        hermes_bin = shutil.which("hermes")
+        if hermes_bin:
+            argv = [hermes_bin, "update"]
+        else:
+            argv = [sys.executable, "-m", "hermes_cli.main", "update"]
+
+        print()
+        print("  ⚕ Launching update...")
+        print()
+
+        # exec replaces the current process with `hermes update`
+        os.execvp(argv[0], argv)
 
     def _show_usage(self):
         """Show rate limits (if available) and session token usage."""
